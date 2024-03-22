@@ -1,0 +1,3 @@
+url=jdbc:mysql://ec2-3-133-90-69.us-east-2.compute.amazonaws.com:3306/myDB?allowPublicKeyRetrieval=true&useSSL=false
+user=jonahnathan
+password=Panthers1349
