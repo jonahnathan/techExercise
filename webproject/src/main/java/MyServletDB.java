@@ -13,66 +13,71 @@ import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/MyServletDB")
 public class MyServletDB extends HttpServlet {
-   private static final long serialVersionUID = 1L;
-   static String url = "jdbc:mysql://ec2-3-133-85-129.us-east-2.compute.amazonaws.com:3306/myDB" + "?" + //
-         "allowPublicKeyRetrieval=true" + "&" + "useSSL=false";
-   static String user = "jonahnathan"; // e.g., newmysqlremoteuser
-   static String password = "Panthers1349"; // e.g., mypassword
-   static Connection connection = null;
+	private static final long serialVersionUID = 1L;
+	static String url = "jdbc:mysql://ec2-18-191-145-144.us-east-2.compute.amazonaws.com:3306/myDB" + "?" + //
+			"allowPublicKeyRetrieval=true" + "&" + "useSSL=false";
+	static String user = "jonahnathan"; // e.g., newmysqlremoteuser
+	static String password = "Panthers1349"; // e.g., mypassword
+	static Connection connection = null;
 
-   public MyServletDB() {
-      super();
-   }
+	public MyServletDB() {
+		super();
+	}
 
-   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-      response.setContentType("text/html;charset=UTF-8");
-      response.getWriter().println("-------- MySQL JDBC Connection Testing ------------<br>");
-      try {
-         Class.forName("com.mysql.cj.jdbc.Driver");// ("com.mysql.jdbc.Driver");
-      } catch (ClassNotFoundException e) {
-         System.out.println("Where is your MySQL JDBC Driver?");
-         e.printStackTrace();
-         return;
-      }
-      response.getWriter().println("MySQL JDBC Driver Registered!<br>");
-      connection = null;
-      try {
-         connection = DriverManager.getConnection(url, user, password);
-      } catch (SQLException e) {
-         System.out.println("Connection Failed! Check output console");
-         e.printStackTrace();
-         return;
-      }
-      if (connection != null) {
-         response.getWriter().println("You made it, take control your database now!<br>");
-      }
-      else {
-         System.out.println("Failed to make connection!");
-      }
-      try {
-         String selectSQL = "SELECT * FROM myTable";// WHERE MYUSER LIKE ?";
-         // String theUserName = "user%";
-         response.getWriter().println(selectSQL + "<br>");
-         response.getWriter().println("------------------------------------------<br>");
-         PreparedStatement preparedStatement = connection.prepareStatement(selectSQL);
-         // preparedStatement.setString(1, theUserName);
-         ResultSet rs = preparedStatement.executeQuery();
-         while (rs.next()) {
-            String id = rs.getString("ID");
-            String username = rs.getString("MYUSER");
-            String email = rs.getString("EMAIL");
-            String phone = rs.getString("PHONE");
-            response.getWriter().append("USER ID: " + id + ", ");
-            response.getWriter().append("USER NAME: " + username + ", ");
-            response.getWriter().append("USER EMAIL: " + email + ", ");
-            response.getWriter().append("USER PHONE: " + phone + "<br>");
-         }
-      } catch (SQLException e) {
-         e.printStackTrace();
-      }
-   }
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		response.setContentType("text/html;charset=UTF-8");
+		response.getWriter().println("-------- MySQL JDBC Connection Testing ------------<br>");
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver");// ("com.mysql.jdbc.Driver");
+		} catch (ClassNotFoundException e) {
+			System.out.println("Where is your MySQL JDBC Driver?");
+			e.printStackTrace();
+			return;
+		}
+		response.getWriter().println("MySQL JDBC Driver Registered!<br>");
+		connection = null;
+		try {
+			connection = DriverManager.getConnection(url, user, password);
+		} catch (SQLException e) {
+			System.out.println("Connection Failed! Check output console");
+			e.printStackTrace();
+			return;
+		}
+		if (connection != null) {
+			response.getWriter().println("You made it, take control your database now!<br>");
+		} else {
+			System.out.println("Failed to make connection!");
+		}
+		try {
+			String selectSQL = "SELECT * FROM myTable";// WHERE MYUSER LIKE ?";
+			// String theUserName = "user%";
+			response.getWriter().println(selectSQL + "<br>");
+			response.getWriter().println("------------------------------------------<br>");
+			PreparedStatement preparedStatement = connection.prepareStatement(selectSQL);
+			// preparedStatement.setString(1, theUserName);
+			ResultSet rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				String id = rs.getString("ID");
+				String firstname = rs.getString("FIRSTNAME");
+				String lastname = rs.getString("LASTNAME");
+				String address = rs.getString("ADDRESS");
+				String phone = rs.getString("PHONE");
+				String email = rs.getString("EMAIL");
+				response.getWriter().append("USER ID: " + id + ", ");
+				response.getWriter().append("USER FIRSTNAME: " + firstname + ", ");
+				response.getWriter().append("USER LASTNAME: " + lastname + ", ");
+				response.getWriter().append("USER ADDRESS: " + address + ", ");
+				response.getWriter().append("USER PHONE: " + phone + ", ");
+				response.getWriter().append("USER EMAIL: " + email + "<br>");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 
-   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-      doGet(request, response);
-   }
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		doGet(request, response);
+	}
 }

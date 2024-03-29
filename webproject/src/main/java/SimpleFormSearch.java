@@ -13,85 +13,174 @@ import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/SimpleFormSearch")
 public class SimpleFormSearch extends HttpServlet {
-   private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-   public SimpleFormSearch() {
-      super();
-   }
+    public SimpleFormSearch() {
+        super();
+    }
 
-   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-      String keyword = request.getParameter("keyword");
-      search(keyword, response);
-   }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String keyword = request.getParameter("keyword");
+        String action = request.getParameter("action");
+        
+        if (action != null && action.equals("delete")) {
+            String firstNameToDelete = request.getParameter("firstNameToDelete");
+            deleteRecord(firstNameToDelete);
+            // Return response as JSON indicating success
+            response.setContentType("application/json");
+            PrintWriter out = response.getWriter();
+            out.print("{\"success\": true}");
+            out.flush();
+            return;
+        }
 
-   void search(String keyword, HttpServletResponse response) throws IOException {
-      response.setContentType("text/html");
-      PrintWriter out = response.getWriter();
-      String title = "Database Result";
-      String docType = "<!doctype html public \"-//w3c//dtd html 4.0 " + //
-            "transitional//en\">\n"; //
-      out.println(docType + //
-            "<html>\n" + //
-            "<head><title>" + title + "</title></head>\n" + //
-            "<body bgcolor=\"#f0f0f0\">\n" + //
-            "<h1 align=\"center\">" + title + "</h1>\n");
+        search(keyword, response);
+    }
 
-      Connection connection = null;
-      PreparedStatement preparedStatement = null;
-      try {
-         DBConnection.getDBConnection();
-         connection = DBConnection.connection;
+    void search(String keyword, HttpServletResponse response) throws IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        String title = "Contact List";
 
-         if (keyword.isEmpty()) {
+        out.println("<!DOCTYPE html>");
+        out.println("<html>");
+        out.println("<head>");
+        out.println("<title>" + title + "</title>");
+        out.println("<style>");
+        out.println("body {font-family: Arial, sans-serif;}");
+        out.println("h1 {text-align: center;}");
+        out.println("table {width: 100%; border-collapse: collapse;}");
+        out.println("th, td {padding: 8px; text-align: left; border-bottom: 1px solid #ddd;}");
+        out.println(".delete-button {background-color: #f44336; color: white; border: none; cursor: pointer; padding: 6px 12px; border-radius: 4px;}");
+        out.println("</style>");
+        out.println("<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>");
+        out.println("<script>");
+        out.println("function deleteRecord(firstName) {");
+        out.println("  if (confirm('Are you sure you want to delete this record?')) {");
+        out.println("    $.ajax({");
+        out.println("      type: 'POST',");
+        out.println("      url: '/webproject/SimpleFormSearch',");
+        out.println("      data: {action: 'delete', firstNameToDelete: firstName},");
+        out.println("      success: function(data) {");
+        out.println("        if(data.success) {");
+        out.println("          alert('Record deleted successfully');");
+        out.println("          location.reload(); // Reload the page after successful deletion");
+        out.println("        } else {");
+        out.println("          alert('Failed to delete record');");
+        out.println("        }");
+        out.println("      },");
+        out.println("      error: function() {");
+        out.println("        alert('Error while deleting record');");
+        out.println("      }");
+        out.println("    });");
+        out.println("  }");
+        out.println("}");
+        out.println("</script>");
+        out.println("</head>");
+        out.println("<body>");
+
+        out.println("<h1>" + title + "</h1>");
+
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            DBConnection.getDBConnection();
+            connection = DBConnection.connection;
+
             String selectSQL = "SELECT * FROM myTable";
-            preparedStatement = connection.prepareStatement(selectSQL);
-         } else {
-            String selectSQL = "SELECT * FROM myTable WHERE MYUSER LIKE ?";
-            String theUserName = keyword + "%";
-            preparedStatement = connection.prepareStatement(selectSQL);
-            preparedStatement.setString(1, theUserName);
-         }
-         ResultSet rs = preparedStatement.executeQuery();
-
-         while (rs.next()) {
-            int id = rs.getInt("id");
-            String userName = rs.getString("myuser").trim();
-            String email = rs.getString("email").trim();
-            String phone = rs.getString("phone").trim();
-
-            if (keyword.isEmpty() || userName.contains(keyword)) {
-               out.println("ID: " + id + ", ");
-               out.println("User: " + userName + ", ");
-               out.println("Email: " + email + ", ");
-               out.println("Phone: " + phone + "<br>");
+            if (!keyword.isEmpty()) {
+                selectSQL = "SELECT * FROM myTable WHERE FIRSTNAME LIKE ? ORDER BY FIRSTNAME ASC";
             }
-         }
-         out.println("<a href=/webproject/simpleFormSearch.html>Search Data</a> <br>");
-         out.println("</body></html>");
-         rs.close();
-         preparedStatement.close();
-         connection.close();
-      } catch (SQLException se) {
-         se.printStackTrace();
-      } catch (Exception e) {
-         e.printStackTrace();
-      } finally {
-         try {
-            if (preparedStatement != null)
-               preparedStatement.close();
-         } catch (SQLException se2) {
-         }
-         try {
-            if (connection != null)
-               connection.close();
-         } catch (SQLException se) {
+
+            preparedStatement = connection.prepareStatement(selectSQL);
+            if (!keyword.isEmpty()) {
+                preparedStatement.setString(1, keyword + "%");
+            }
+
+            ResultSet rs = preparedStatement.executeQuery();
+
+            out.println("<table>");
+            out.println("<tr><th>First Name</th><th>Last Name</th><th>Address</th><th>Phone Number</th><th>Email</th><th>Action</th></tr>");
+
+            while (rs.next()) {
+                String firstName = rs.getString("firstname").trim();
+                String lastName = rs.getString("lastname").trim();
+                String address = rs.getString("address").trim();
+                String phone = rs.getString("phone").trim();
+                String email = rs.getString("email").trim();
+
+                if (keyword.isEmpty() || firstName.contains(keyword)) {
+                    out.println("<tr>");
+                    out.println("<td>" + firstName + "</td>");
+                    out.println("<td>" + lastName + "</td>");
+                    out.println("<td>" + address + "</td>");
+                    out.println("<td>" + phone + "</td>");
+                    out.println("<td>" + email + "</td>");
+                    out.println("<td><button class='delete-button' onclick='deleteRecord(\"" + firstName + "\")'>Delete</button></td>");
+                    out.println("</tr>");
+                }
+            }
+            out.println("</table>");
+
+            out.println("<a href='/webproject/simpleFormSearch.html'>Go Back</a> <br>");
+            out.println("</body></html>");
+            rs.close();
+            preparedStatement.close();
+            connection.close();
+        } catch (SQLException se) {
             se.printStackTrace();
-         }
-      }
-   }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (preparedStatement != null)
+                    preparedStatement.close();
+            } catch (SQLException se2) {
+            }
+            try {
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+    }
 
-   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-      doGet(request, response);
-   }
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        doGet(request, response);
+    }
 
+    void deleteRecord(String firstName) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            DBConnection.getDBConnection();
+            connection = DBConnection.connection;
+
+            String deleteSql = "DELETE FROM myTable WHERE FIRSTNAME = ?";
+            preparedStatement = connection.prepareStatement(deleteSql);
+            preparedStatement.setString(1, firstName);
+            preparedStatement.executeUpdate();
+
+            connection.close();
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (preparedStatement != null)
+                    preparedStatement.close();
+            } catch (SQLException se2) {
+            }
+            try {
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+    }
 }

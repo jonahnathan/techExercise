@@ -1,0 +1,54 @@
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet("/DeleteRecord")
+public class DeleteRecord extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String name = request.getParameter("name");
+        deleteRecord(name);
+        response.sendRedirect("/webproject/SimpleFormSearch");
+    }
+
+    void deleteRecord(String name) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            DBConnection.getDBConnection();
+            connection = DBConnection.connection;
+
+            String deleteSql = "DELETE FROM myTable WHERE NAME = ?";
+            preparedStatement = connection.prepareStatement(deleteSql);
+            preparedStatement.setString(1, name);
+            preparedStatement.executeUpdate();
+
+            connection.close();
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (preparedStatement != null)
+                    preparedStatement.close();
+            } catch (SQLException se2) {
+            }
+            try {
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+    }
+}
